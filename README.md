@@ -1,4 +1,5 @@
 # Artificial-Intelligence-Coursework
+
 Repo to add and amend code related to our Level 6 Computer Science AI Coursework
 
 Part a
@@ -34,10 +35,10 @@ Part b
 
 Part c
 
-    reate a suitable Neural Network that can approximate the following function:
+    create a suitable Neural Network that can approximate the following function:
     y=3x+0.7x^2
 
-    Show how it works via plots and/ or suitable text outputs.
+    Show how it works via plots and/or suitable text outputs.
 
 Part d
 
@@ -46,7 +47,7 @@ Part d
     downloaded from the Module’s Moodle page. Create a suitable Neural Network that
     can predict the price of a diamond given a series of the above characteristics. For the
     purpose of this exercise you can use all of the data or choose not to use up to three (3).
-    Show that it works via plots and/ or suitable text outputs. 
+    Show that it works via plots and/ or suitable text outputs.
 
     Data     |  Explanation of value in dataset
     Price    |  price in US dollars ($326--$18,823)
