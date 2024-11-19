@@ -1,109 +1,104 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-class NN:
-    # The constructor: X = input neurons count, HL = hidden layers, Y = output neurons
-    def __init__(self, X=1, HL=[10], Y=1):
-        self.X = X  
-        self.HL = HL  
-        self.Y = Y  
-        L = [X] + HL + [Y]
+# Function definition
+def target_function(x):
+    return 3 * x + 0.7 * x**2
+
+# Generate training data
+np.random.seed(42)
+x_train = np.linspace(-10, 10, 200).reshape(-1, 1)
+y_train = target_function(x_train).ravel() + np.random.normal(scale=5, size=x_train.shape[0])
+
+# Neural network model using forward pass
+def initialize_parameters(input_size, hidden_layer_sizes, output_size):
+    parameters = []
+    layer_sizes = [input_size] + list(hidden_layer_sizes) + [output_size]
+    
+    for i in range(len(layer_sizes) - 1):
+        weight = np.random.randn(layer_sizes[i], layer_sizes[i + 1]) * 0.1
+        bias = np.zeros((1, layer_sizes[i + 1]))
+        parameters.append((weight, bias))
+    
+    return parameters
+
+# Forward pass
+def forward_pass(x, parameters):
+    activations = [x]
+    for weight, bias in parameters:
+        x = np.dot(x, weight) + bias
+        x = np.maximum(0, x) 
+        activations.append(x)
+    return activations
+
+# Backward pass
+def backward_pass(activations, parameters, y_true, learning_rate):
+    gradients = []
+    y_pred = activations[-1]
+    error = y_pred - y_true.reshape(-1, 1)
+    
+    delta = error * (y_pred > 0)
+    for i in reversed(range(len(parameters))):
+        weight, bias = parameters[i]
+        grad_weight = np.dot(activations[i].T, delta)
+        grad_bias = np.sum(delta, axis=0, keepdims=True)
+        gradients.append((grad_weight, grad_bias))
         
-        # weights for the layers (i to i+1)
-        W = []  
-        for i in range(len(L) - 1):
-            w = np.random.rand(L[i], L[i + 1])
-            W.append(w)
-        self.W = W
+        if i > 0:
+            delta = np.dot(delta, weight.T) * (activations[i] > 0)
+    
+    gradients = gradients[::-1]
+    
+    # Update parameters
+    for i in range(len(parameters)):
+        weight, bias = parameters[i]
+        grad_weight, grad_bias = gradients[i]
+        parameters[i] = (weight - learning_rate * grad_weight, bias - learning_rate * grad_bias)
+    
+    return parameters
+
+# Training loop
+def train_neural_network(x_train, y_train, hidden_layer_sizes=(10, 10), epochs=5000, learning_rate=0.01):
+    input_size = x_train.shape[1]
+    output_size = 1
+    parameters = initialize_parameters(input_size, hidden_layer_sizes, output_size)
+    
+    for epoch in range(epochs):
+        activations = forward_pass(x_train, parameters)
+        parameters = backward_pass(activations, parameters, y_train, learning_rate)
         
-        # back propagation derivatives (inspired by session 5 code)
-        Der = []  
-        for i in range(len(L) - 1):
-            d = np.zeros((L[i], L[i + 1]))
-            Der.append(d)
-        self.Der = Der 
-        
-        # outputs
-        out = []  
-        for i in range(len(L)):
-            o = np.zeros(L[i])  
-            out.append(o)
-        self.out = out 
+        if epoch % 100 == 0:
+            loss = np.mean((activations[-1] - y_train.reshape(-1, 1)) ** 2)
+            print(f"Epoch {epoch}, Loss: {loss}")
+    
+    return parameters
 
-    # Feedforward
-    def FF(self, x):
-        out = x  
-        self.out[0] = x  
-        for i, w in enumerate(self.W):  
-            Xnext = np.dot(out, w) 
-            out = self.sigmoid(Xnext)  
-            self.out[i + 1] = out  
-        return out  
-
-    # Back propagation
-    def BP(self, Er):
-        for i in reversed(range(len(self.Der))):
-            out = self.out[i + 1]
-            D = Er * self.sigmoid_Der(out) 
-            D_fixed = D.reshape(D.shape[0], -1).T
-            this_out = self.out[i].reshape(self.out[i].shape[0], -1)
-            self.Der[i] = np.dot(this_out, D_fixed)  
-            Er = np.dot(D, self.W[i].T)  
-
-    # Training
-    def train_nn(self, x, target, epochs, lr):
-        for i in range(epochs):
-            S_errors = 0  
-            for j, input in enumerate(x):
-                t = target[j]
-                output = self.FF(input)
-                e = t - output  
-                self.BP(e)
-                self.GD(lr)  
-                S_errors += self.msqe(t, output) 
-        
-    # Gradient descent
-    def GD(self, lr=0.05):
-        for i in range(len(self.W)):
-            self.W[i] += self.Der[i] * lr  
-
-    # Sigmoid activation
-    def sigmoid(self, x):
-        return 1.0 / (1 + np.exp(-x))
-    def sigmoid_Der(self, x):
-        return x * (1.0 - x)
-
-    # Mean square error
-    def msqe(self, t, output):
-        return np.average((t - output) ** 2)
-
-if __name__ == "__main__":
-    # Generate data
-    x_values = np.linspace(-10, 10, 1000).reshape(-1, 1) 
-    y_values = 3 * x_values + 0.7 * x_values ** 2
-
-    nn = NN(1, [10], 1)
-    nn.train_nn(x_values, y_values, epochs=1000, lr=0.01)
-
-    # Testing stuff here (inspired by the testing format in session 5 as it looked cool)
-    test_input = np.array([5]) 
-    test_target = 3 * test_input + 0.7 * test_input ** 2
-    NN_output = nn.FF(test_input)
-    print("=================Test Test Test====================")
-    print("Test input is ", test_input)
-    print("Target output is ", test_target)
-    print("Neural Network actual output is ", NN_output, " there is an error (not MSQE) of ", test_target - NN_output)
-    print("===================================================")
-
-    # Visualize it baby (used matplotlib) This may take a lil min
-    predicted_values = np.array([nn.FF(x) for x in x_values])
-
+# Plotting function
+def plot_results(parameters):
+    x_test = np.linspace(-10, 10, 200).reshape(-1, 1)
+    activations = forward_pass(x_test, parameters)
+    y_pred = activations[-1]
+    
     plt.figure(figsize=(10, 6))
-    plt.plot(x_values, y_values, label='Actual Function (y = 3x + 0.7x^2)', color='b')
-    plt.plot(x_values, predicted_values, label='Neural Network Approximation', color='r', linestyle='--')
+    plt.scatter(x_train, y_train, color='gray', alpha=0.5, label='Training Data')
+    plt.plot(x_test, target_function(x_test), color='blue', label='Target Function')
+    plt.plot(x_test, y_pred, color='red', linestyle='--', label='Neural Network Prediction')
+    plt.legend()
     plt.xlabel('x')
     plt.ylabel('y')
-    plt.title('Neural Network Approximation of y = 3x + 0.7x^2')
-    plt.legend()
-    plt.grid()
+    plt.title('Neural Network Approximation of y=3x+0.7x^2')
     plt.show()
+
+# Parameters
+hidden_layer_sizes = (20, 10)  # Example architecture
+epochs = 5000
+learning_rate = 0.5
+
+# Train and plot
+parameters = train_neural_network(x_train, y_train, hidden_layer_sizes=hidden_layer_sizes, epochs=epochs, learning_rate=learning_rate)
+plot_results(parameters)
+
+# Allow for change in parameters
+def interactive_training(hidden_layer_sizes=(10, 10), epochs=1000, learning_rate=0.01):
+    parameters = train_neural_network(x_train, y_train, hidden_layer_sizes=hidden_layer_sizes, epochs=epochs, learning_rate=learning_rate)
+    plot_results(parameters)
