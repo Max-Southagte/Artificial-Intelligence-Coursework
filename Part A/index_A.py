@@ -65,31 +65,42 @@ def final_fitness(population):
     x = numpy.argmax(fitness)
     return population[x]
 
+def generation_loop(pop_size, chromosome_count, mutation_rate, generation_count):
+    population = initial_population(pop_size, chromosome_count)
+
+    k = 1
+    while k <= generation_count:
+        fitness = []
+        for i in range(pop_size):
+            fitness.append(fitness_func(population[i]))
+        
+        parents = []
+        parents = roulette_wheel(fitness, population)
+        
+        population = crossover(parents)
+        
+        for j in range(len(population)):
+            population[j] = mutate(population[j], mutation_rate)
+
+        print("best in generation", k, ": ", final_fitness(population), " fitness: ", fitness_func(final_fitness(population)))
+        k += 1
+
+    print("\nbest in final generation: ", final_fitness(population), " fitness: ", fitness_func(final_fitness(population)),"\n")
+
 ###--MAIN--###
 
+### defaults
 pop_size = 100
 chromosome_count = 32
 mutation_rate = 0.001
-generation_count = 500
+generation_count = 200
 
-population = initial_population(pop_size, chromosome_count) 
+if(str(input("do you wish to change the initial parameters? if yes, type y: ")) != "y"):
+    generation_loop(pop_size, chromosome_count, mutation_rate, generation_count)
+else:
+    pop_size = int(input("total population per generation (def = 100): "))
+    chromosome_count = int(input("number of chromosomes per pop (def = 32): "))
+    mutatuon_rate = float(input("rate of mutation (def = 0.001): "))
+    generation_count = int(input("number of generations (def = 200): "))
+    generation_loop(pop_size, chromosome_count, mutation_rate, generation_count)
 
-### loop
-k = 1
-while k <= generation_count:
-    fitness = []
-    for i in range(pop_size):
-        fitness.append(fitness_func(population[i]))
-    
-    parents = []
-    parents = roulette_wheel(fitness, population)
-    
-    population = crossover(parents)
-    
-    for j in range(len(population)):
-        population[j] = mutate(population[j], mutation_rate)
-
-    k += 1
-
-print("best:")
-print(final_fitness(population))
