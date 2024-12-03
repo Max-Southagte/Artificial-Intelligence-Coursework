@@ -20,20 +20,21 @@ def init(input_size, hidden_layer_sizes, output_size):
     
     return parameters
 
-def fp(x, parameters):
+def fp(x, parameters):  # forward pass
     activations = [x]
-    for weight, bias in parameters:
+    for i, (weight, bias) in enumerate(parameters):
         x = np.dot(x, weight) + bias
-        x = np.maximum(0, x) 
+        if i < len(parameters) - 1:
+            x = np.tanh(x)
         activations.append(x)
     return activations
 
-def bp(activations, parameters, y_true, learning_rate):
+def bp(activations, parameters, y_true, learning_rate):  # back pass
     gradients = []
     y_pred = activations[-1]
     error = y_pred - y_true.reshape(-1, 1)
     
-    delta = error * (y_pred > 0)
+    delta = error  # Linear activation in output layer
     for i in reversed(range(len(parameters))):
         weight, bias = parameters[i]
         grad_weight = np.dot(activations[i].T, delta)
@@ -41,7 +42,7 @@ def bp(activations, parameters, y_true, learning_rate):
         gradients.append((grad_weight, grad_bias))
         
         if i > 0:
-            delta = np.dot(delta, weight.T) * (activations[i] > 0)
+            delta = np.dot(delta, weight.T) * (1 - activations[i] ** 2)
     
     gradients = gradients[::-1]
     
@@ -52,7 +53,7 @@ def bp(activations, parameters, y_true, learning_rate):
     
     return parameters
 
-def training(x_train, y_train, hidden_layer_sizes=(10, 10), epochs=5000, learning_rate=0.01):
+def training(x_train, y_train, hidden_layer_sizes=(20, 20), epochs=5000, learning_rate=0.01):
     input_size = x_train.shape[1]
     output_size = 1
     parameters = init(input_size, hidden_layer_sizes, output_size)
@@ -75,8 +76,8 @@ def plot_results(parameters):
     
     plt.figure(figsize=(10, 6))
     plt.scatter(x_train, y_train, color='gray', alpha=0.5, label='Training Data')
-    plt.plot(x_test, target_function(x_test), color='blue', label='Target Function')
-    plt.plot(x_test, y_pred, color='red', linestyle='--', label='Neural Network Prediction')
+    # plt.plot(x_test, target_function(x_test), color='blue', label='Target Function', linewidth=2)
+    plt.plot(x_test, y_pred, color='red', linestyle='--', linewidth=2.5, label='Neural Network Prediction')
     plt.legend()
     plt.xlabel('x')
     plt.ylabel('y')
@@ -84,15 +85,10 @@ def plot_results(parameters):
     plt.show()
 
 # Parameters
-hidden_layer_sizes = (20, 10)
+hidden_layer_sizes = (20, 20)
 epochs = 5000
-learning_rate = 0.5
+learning_rate = 0.01
 
 # Train and plot
 parameters = training(x_train, y_train, hidden_layer_sizes=hidden_layer_sizes, epochs=epochs, learning_rate=learning_rate)
 plot_results(parameters)
-
-# Allow for change in parameters
-def interactive_training(hidden_layer_sizes=(10, 10), epochs=1000, learning_rate=0.01):
-    parameters = training(x_train, y_train, hidden_layer_sizes=hidden_layer_sizes, epochs=epochs, learning_rate=learning_rate)
-    plot_results(parameters)
