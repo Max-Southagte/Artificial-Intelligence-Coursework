@@ -5,7 +5,7 @@ np.random.seed(42)
 x_values = np.linspace(-10, 10, 100)
 y_actual = 3 * x_values + 0.7 * x_values**2
 
-class SimpleNeuralNetwork:
+class NeuralNetwork:
     def __init__(self, input_size, hidden_size, output_size, learning_rate=0.01):
         self.weights_input_hidden = np.random.randn(input_size, hidden_size) * 0.1
         self.bias_hidden = np.zeros(hidden_size)
@@ -50,7 +50,7 @@ class SimpleNeuralNetwork:
 x_train = x_values.reshape(-1, 1)
 y_train = y_actual.reshape(-1, 1)
 
-nn = SimpleNeuralNetwork(input_size=1, hidden_size=40, output_size=1, learning_rate=0.1)
+nn = NeuralNetwork(input_size=1, hidden_size=40, output_size=1, learning_rate=0.1)
 loss_history = nn.train(x_train, y_train, epochs=10000)
 
 y_predictions = nn.forward(x_train)
