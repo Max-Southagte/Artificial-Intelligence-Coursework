@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 # Load the dataset (replace 'diamonds.csv' with your dataset file path)
 data = pd.read_csv('diamonds.csv')
@@ -89,7 +88,7 @@ def predict_price(input_features):
     hidden_layer_output = relu_activation(hidden_layer_input)
     output_layer_input = np.dot(hidden_layer_output, weights_hidden_output) + bias_output
     predicted_price = output_layer_input[0, 0]
-    print(predicted_price)
+    print(predicted_price * target_std + target_mean)
     return predicted_price * target_std + target_mean
 
 # User input for prediction
