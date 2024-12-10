@@ -35,7 +35,7 @@ input_layer_size = features_train.shape[1]
 hidden_layer_size = 10
 output_layer_size = 1
 learning_rate = 0.01
-num_epochs = 5000
+num_epochs = 50000
 
 # Initialize weights and biases
 np.random.seed(42)
